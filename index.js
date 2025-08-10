@@ -18,17 +18,21 @@ app.use((req, res, next) => {
 });
 
 app.post('/submit-form', async (req, res) => {
+  console.log(req.body);
+  
   const { name_surname, cellphone, type } = req.body;
 
   // Setup transporter
   console.log(req.body);
-  const transporter = nodemailer.createTransport({
-    service: 'gmail', // or 'smtp.ethereal.email' etc.
-    auth: {
-      user: process.env.EMAIL_USER, // Your email
-      pass: process.env.EMAIL_PASS, // App password (not your normal password)
-    },
-  });
+const transporter = nodemailer.createTransport({
+  host: "smtp.office365.com", // REQUIRED, or it will use localhost (::1)
+  port: 587,
+  secure: false, // STARTTLS
+  auth: {
+    user: process.env.EMAIL_USER, // full email address
+    pass: process.env.EMAIL_PASS
+  }
+});
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -39,10 +43,10 @@ app.post('/submit-form', async (req, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).send('Email sent successfully.');
+    res.send(200)
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error sending email.');
+    res.status(500)
   }
 });
 
