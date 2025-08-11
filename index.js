@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 app.post('/submit-form', async (req, res) => {
   console.log(req.body);
   
-  const { name_surname, cellphone, type } = req.body;
+  const { name_surname, cellphone, type,email } = req.body;
 
   // Setup transporter
   console.log(req.body);
@@ -38,7 +38,7 @@ const transporter = nodemailer.createTransport({
     from: process.env.EMAIL_USER,
     to: process.env.TO_EMAIL, // Who should receive it
     subject: 'New Lead from Future-e Contact Form',
-    text: `Name: ${name_surname}\nCellphone: ${cellphone}\nType: ${type}`,
+    text: `Name: ${name_surname}\nCellphone: ${cellphone}\nType: ${type}\nEmail address: ${email}`,
   };
 
   try {
