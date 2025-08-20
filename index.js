@@ -54,7 +54,7 @@ app.get("/",(req,res)=>{
   res.send(200)
 })
 
-app.post("/login", (req, res) => {
+app.post("/login-admin", (req, res) => {
   console.log(req.body);
   const { username, password } = req.body;
 
@@ -72,6 +72,21 @@ app.post("/login", (req, res) => {
 app.get("/under-construction", (req, res) => {
   res.json({underConstruction: true});
 })
+
+app.post("/login", (req, res) => {
+  console.log(req.body);
+
+  data ={ companyName : "WeBuyCars" ,
+    towing : 27814385555
+  }
+
+  const { companyName, password } = req.body;
+
+  if(companyName === "asd" && password === "asd" ){
+    console.log("Valid login");
+    res.json({data});
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
