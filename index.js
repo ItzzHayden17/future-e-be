@@ -73,7 +73,9 @@ app.get("/under-construction", (req, res) => {
   res.json({underConstruction: true});
 })
 
-app.post("/login", (req, res) => {
+app.post("/login", (req, res) => {  //company login
+
+  //to do : fetch company from database and reply with all info
   console.log(req.body);
 
   data ={ companyName : "WeBuyCars" ,
@@ -87,6 +89,19 @@ app.post("/login", (req, res) => {
     res.json({data});
   }
 });
+
+app.post("/claims", (req, res) => {   //claim submission must go to email
+
+ })
+
+app.post("/add-company", (req, res) => {  //add company to database
+  
+ })
+
+app.put("/edit-company", (req, res) => {  //update company in database
+ })
+
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
