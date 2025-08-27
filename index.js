@@ -15,9 +15,19 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+const transporter = nodemailer.createTransport({
+  host: "smtp.office365.com", // REQUIRED, or it will use localhost (::1)
+  port: 587,
+  secure: false, // STARTTLS
+  auth: {
+    user: process.env.EMAIL_USER, // full email address
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 // Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));          // for JSON requests
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Allow CORS if form is served from another domain
 app.use((req, res, next) => {
@@ -31,17 +41,9 @@ app.post('/submit-form', async (req, res) => {
   
   const { name_surname, cellphone, type,email } = req.body;
 
-  // Setup transporter
+  
   console.log(req.body);
-const transporter = nodemailer.createTransport({
-  host: "smtp.office365.com", // REQUIRED, or it will use localhost (::1)
-  port: 587,
-  secure: false, // STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER, // full email address
-    pass: process.env.EMAIL_PASS
-  }
-});
+
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -118,9 +120,46 @@ if (!snapshot.empty) {
     
 });
 
-app.post("/claims", (req, res) => {   //claim submission must go to email
+app.post("/claims", async (req, res) => {   //claim submission must go to email
 
- })
+  const {date_time_place,desc_other_vehicle,other_driver_details,owner_details,insurance_company_of_other_driver,witness_contact_details,police_officer_details,accident_description,companyName,accident_sketch} = req.body
+  const base64Data = accident_sketch.replace(/^data:image\/png;base64,/, "");
+
+    const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: "sony.anray743@gmail.com", // Who should receive it
+    subject: `New Claim from Future-e claims portal for ${companyName}`,
+    text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time_place}\n
+           OTHER VEHICLE(S) DETAILS – MAKE(S), COLOUR(S) AND REGISTRATION NUMBER(S): ${desc_other_vehicle}\n
+           OTHER DRIVER(S) DETAILS – NAME(S), SURNAME(S), ADDRESS(ES), PHONE NUMBER(S),ID NUMBER(S): ${other_driver_details}\n
+           OWNER DETAILS (ONLY IF THE DRIVER IS NOT THE OWNER) – NAME, ADDRESS, PHONE NUMBER: ${owner_details}\n
+           INSURANCE COMPANY(IES) – WITH WHICH THE OTHER VEHICLE(S) IS/ARE INSURED?: ${insurance_company_of_other_driver}\n
+           NAME AND CONTACT DETAILS OF ANY WITNESS(ES): ${witness_contact_details}\n
+           NAME AND STATION OF THE POLICE/TRAFFIC OFFICER – IF PRESENT: ${police_officer_details}\n
+           GIVE A SHORT DISCRIPTION OF THE ACCIDENT: ${accident_description}\n 
+           `,
+    attachments: [
+    {
+      filename: 'accident.png',
+      content: base64Data,
+      encoding: 'base64',
+    },
+  ],
+           
+  };
+
+  console.log(accident_sketch);
+  
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.send(200)
+  } catch (error) {
+    console.error(error);
+    res.status(200)
+  
+ }
+})
 
 app.post("/add-company", (req, res) => {  //add company to database
 
