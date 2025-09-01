@@ -22,7 +22,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER, // full email address
     pass: process.env.EMAIL_PASS
+  },
+    tls: {
+    ciphers: "SSLv3"
   }
+  
 });
 
 // Middleware
@@ -101,8 +105,6 @@ app.get("/companies", (req, res) => {  //get all companies from database
 
 app.post("/company-login", async (req, res) => {  //company login
 
-  //to do : fetch company from database and reply with all info
-  console.log(req.body.companyName);
 
   const snapshot = await db.collection('companies')
   .where('companyName', '==', req.body.companyName)
@@ -127,7 +129,7 @@ app.post("/claims", async (req, res) => {   //claim submission must go to email
 
     const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "sony.anray743@gmail.com", // Who should receive it
+    to: "marketing@futur-e.co.za", // Who should receive it
     subject: `New Claim from Future-e claims portal for ${companyName}`,
     text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time_place}\n
            OTHER VEHICLE(S) DETAILS – MAKE(S), COLOUR(S) AND REGISTRATION NUMBER(S): ${desc_other_vehicle}\n
@@ -148,15 +150,15 @@ app.post("/claims", async (req, res) => {   //claim submission must go to email
            
   };
 
-  console.log(accident_sketch);
-  
-
   try {
     await transporter.sendMail(mailOptions);
     res.send(200)
+    console.log("claim sent" );
   } catch (error) {
     console.error(error);
-    res.status(200)
+    res.status(400)
+    
+    
   
  }
 })
