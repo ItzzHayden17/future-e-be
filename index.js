@@ -174,7 +174,8 @@ app.post("/add-company", (req, res) => {  //add company to database
     await docRef.set({
       companyName: req.body.companyName,
       password: req.body.password,
-      towingServiceNumber: req.body.towingNumber
+      towingServiceNumber: req.body.towingNumber,
+      policyNumber : req.body.policyNumber
     });
 
     res.send(200);
@@ -186,7 +187,7 @@ app.post("/add-company", (req, res) => {  //add company to database
 
 app.post("/edit-company", (req, res) => {  //update company in database
 
-  const { id, companyName, password, towingNumber } = req.body;
+  const { id, companyName, password, towingNumber,policyNumber } = req.body;
 
   console.log(req.body);
   
@@ -195,15 +196,39 @@ app.post("/edit-company", (req, res) => {  //update company in database
   await db.collection("companies").doc(id).update({
     companyName: companyName,
     password: password,
-    towingServiceNumber: towingNumber
+    towingServiceNumber: towingNumber,
+    policyNumber : policyNumber
   });
   console.log("Company updated!");
 }
 
   updateCompany();
+  res.send(200)
 
  })
 
+ app.post("/delete/:id",async (req,res)=>{
+  const companyId = req.params.id;
+
+  try {
+    // reference to the document
+    const docRef = db.collection("companies").doc(companyId);
+
+    // check if doc exists
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    // delete it
+    await docRef.delete();
+
+    res.status(200).json({ message: "Company deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting company:", error);
+    res.status(500).json({ error: "Failed to delete company" });
+  }
+ })
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
