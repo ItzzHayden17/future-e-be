@@ -51,7 +51,7 @@ app.post('/submit-form', async (req, res) => {
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: process.env.TO_EMAIL, // Who should receive it
+    to: "sony.anray743@gmail.com", // Who should receive it
     subject: 'New Lead from Future-e Contact Form',
     text: `Name: ${name_surname}\nCellphone: ${cellphone}\nType: ${type}\nEmail address: ${email}`,
   };
