@@ -129,7 +129,7 @@ app.post("/claims", async (req, res) => {   //claim submission must go to email
 
     const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "marketing@futur-e.co.za", // Who should receive it
+    to: "marketing@futur-e.co.za", // Who should receive it |   SONY.ANRAY743@GMAIL.COM
     subject: `New Claim from Future-e claims portal for ${companyName}`,
     text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time}\n
            PLACE OF ACCIDENT: ${place}\n
@@ -150,6 +150,7 @@ app.post("/claims", async (req, res) => {   //claim submission must go to email
   ],
            
   };
+  
 
   try {
     await transporter.sendMail(mailOptions);
@@ -158,9 +159,6 @@ app.post("/claims", async (req, res) => {   //claim submission must go to email
   } catch (error) {
     console.error(error);
     res.status(400)
-    
-    
-  
  }
 })
 
