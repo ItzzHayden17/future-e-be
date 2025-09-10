@@ -51,7 +51,7 @@ app.post('/submit-form', async (req, res) => {
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "sony.anray743@gmail.com", // Who should receive it
+    to: "marketing@futur-e.co.za", // Who should receive it
     subject: 'New Lead from Future-e Contact Form',
     text: `Name: ${name_surname}\nCellphone: ${cellphone}\nType: ${type}\nEmail address: ${email}`,
   };
@@ -124,14 +124,15 @@ if (!snapshot.empty) {
 
 app.post("/claims", async (req, res) => {   //claim submission must go to email
 
-  const {date_time_place,desc_other_vehicle,other_driver_details,owner_details,insurance_company_of_other_driver,witness_contact_details,police_officer_details,accident_description,companyName,accident_sketch} = req.body
+  const {date_time,place,desc_other_vehicle,other_driver_details,owner_details,insurance_company_of_other_driver,witness_contact_details,police_officer_details,accident_description,companyName,accident_sketch} = req.body
   const base64Data = accident_sketch.replace(/^data:image\/png;base64,/, "");
 
     const mailOptions = {
     from: process.env.EMAIL_USER,
     to: "marketing@futur-e.co.za", // Who should receive it
     subject: `New Claim from Future-e claims portal for ${companyName}`,
-    text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time_place}\n
+    text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time}\n
+           PLACE OF ACCIDENT: ${place}\n
            OTHER VEHICLE(S) DETAILS – MAKE(S), COLOUR(S) AND REGISTRATION NUMBER(S): ${desc_other_vehicle}\n
            OTHER DRIVER(S) DETAILS – NAME(S), SURNAME(S), ADDRESS(ES), PHONE NUMBER(S),ID NUMBER(S): ${other_driver_details}\n
            OWNER DETAILS (ONLY IF THE DRIVER IS NOT THE OWNER) – NAME, ADDRESS, PHONE NUMBER: ${owner_details}\n
