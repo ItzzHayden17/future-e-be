@@ -4,9 +4,10 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const admin = require("firebase-admin");
 const serviceAccount = require("./futur-e-firebase-adminsdk-fbsvc-4f1e481bfe.json");
-
+const multer = require('multer');
 const app = express();
 const PORT = 8080;
+const upload = multer({ storage: multer.memoryStorage() });
 
 //firesbase init
 admin.initializeApp({
@@ -122,10 +123,15 @@ if (!snapshot.empty) {
     
 });
 
-app.post("/claims", async (req, res) => {   //claim submission must go to email
+app.post("/claims", upload.array("images",50),async (req, res) => {   //claim submission must go to email
 
   const {date_time,place,desc_other_vehicle,other_driver_details,owner_details,insurance_company_of_other_driver,witness_contact_details,police_officer_details,accident_description,companyName,accident_sketch} = req.body
   const base64Data = accident_sketch.replace(/^data:image\/png;base64,/, "");
+
+    const imageAttachments = req.files.map(file => ({
+    filename: file.originalname,
+    path: file.path
+  }));
 
     const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -147,6 +153,7 @@ app.post("/claims", async (req, res) => {   //claim submission must go to email
       content: base64Data,
       encoding: 'base64',
     },
+    ...imageAttachments
   ],
            
   };
