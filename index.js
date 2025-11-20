@@ -86,7 +86,7 @@ app.post("/login-admin", (req, res) => {
 })
 
 app.get("/under-construction", (req, res) => {
-  res.json({underConstruction: false});
+  res.json({underConstruction: true});
 })
 
 app.get("/companies", (req, res) => {  //get all companies from database
