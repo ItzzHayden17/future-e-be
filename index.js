@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const admin = require("firebase-admin");
-const serviceAccount = require("./futur-e-docs-firebase-adminsdk-fbsvc-173d97da4.json");
+const serviceAccount = require("./futur-e-docs-firebase-adminsdk-fbsvc-2f4fb93b31.json");
 const multer = require('multer');
 const app = express();
 const PORT = 8080;
@@ -12,7 +12,7 @@ const { Storage } = require("@google-cloud/storage");
 
 
 const storage = new Storage({
-  keyFilename: "./futur-e-docs-firebase-adminsdk-fbsvc-173d97da41.json",
+  keyFilename: "./futur-e-docs-firebase-adminsdk-fbsvc-2f4fb93b31.json",
 });
 
 const bucket = storage.bucket("gs://futur-e-docs.firebasestorage.app");
