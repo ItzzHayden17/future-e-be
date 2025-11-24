@@ -3,11 +3,30 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const admin = require("firebase-admin");
-const serviceAccount = require("./futur-e-firebase-adminsdk-fbsvc-4f1e481bfe.json");
+const serviceAccount = require("./futur-e-docs-firebase-adminsdk-fbsvc-173d97da41.json");
 const multer = require('multer');
 const app = express();
 const PORT = 8080;
 const upload = multer({ storage: multer.memoryStorage() });
+const { Storage } = require("@google-cloud/storage");
+
+
+const storage = new Storage({
+  keyFilename: "./futur-e-docs-firebase-adminsdk-fbsvc-173d97da41.json",
+});
+
+const bucket = storage.bucket("gs://futur-e-docs.firebasestorage.app");
+
+async function uploadFile(pathToLocalFile, destination) {
+  await bucket.upload(pathToLocalFile, {
+    destination,
+  });
+
+  console.log("Uploaded:", destination);
+}
+
+module.exports = { uploadFile };
+
 
 //firesbase init
 admin.initializeApp({
@@ -126,16 +145,17 @@ if (!snapshot.empty) {
 app.post("/claims", upload.array("images",50),async (req, res) => {   //claim submission must go to email
 
   const {date_time,place,desc_other_vehicle,other_driver_details,owner_details,insurance_company_of_other_driver,witness_contact_details,police_officer_details,accident_description,companyName,accident_sketch} = req.body
-  const base64Data = accident_sketch.replace(/^data:image\/png;base64,/, "");
+  
 
-    const imageAttachments = req.files.map(file => ({
+  const imageAttachments = req.files.map(file => ({
     filename: file.originalname,
-    path: file.path
+    content: file.buffer,
+    contentType: file.mimetype
   }));
 
     const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "claims@futur-e.co.za", // Who should receive it |   SONY.ANRAY743@GMAIL.COM
+    to: "info@futur-e.co.za", // Who should receive it |   SONY.ANRAY743@GMAIL.COM
     subject: `New Claim from Future-e claims portal for ${companyName}`,
     text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time}\n
            PLACE OF ACCIDENT: ${place}\n
@@ -147,14 +167,7 @@ app.post("/claims", upload.array("images",50),async (req, res) => {   //claim su
            NAME AND STATION OF THE POLICE/TRAFFIC OFFICER – IF PRESENT: ${police_officer_details}\n
            GIVE A SHORT DISCRIPTION OF THE ACCIDENT: ${accident_description}\n 
            `,
-    attachments: [
-    {
-      filename: 'accident.png',
-      content: base64Data,
-      encoding: 'base64',
-    },
-    ...imageAttachments
-  ],
+    attachments: imageAttachments
            
   };
   
@@ -169,49 +182,93 @@ app.post("/claims", upload.array("images",50),async (req, res) => {   //claim su
  }
 })
 
-app.post("/add-company", (req, res) => {  //add company to database
+app.post("/add-company", upload.single("file"), async (req, res) => {
+  try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
-  console.log(req.body);
-  
+    // Create a reference to the file in GCS
+    const fileName = `company_docs/${req.body.companyName}_Claim_Form.pdf`;
+    const gcsFile = bucket.file(fileName);
 
-  async function addUser() {
-    
-    const docRef = db.collection('companies').doc(); // Automatically generate unique ID
+    // Upload the buffer directly
+    await gcsFile.save(req.file.buffer, {
+      contentType: req.file.mimetype,
+    });
+
+    // Make the file public (optional, only if you want everyone to access it)
+    // await gcsFile.makePublic();
+    // const fileUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+    // Or, generate a signed URL (valid for 1 year)
+    const expires = Date.now() + 365 * 24 * 60 * 60 * 1000; // 1 year
+    const [fileUrl] = await gcsFile.getSignedUrl({
+      action: "read",
+      expires,
+    });
+
+    // Save company info to Firestore, including file URL
+    const docRef = db.collection("companies").doc();
     await docRef.set({
       companyName: req.body.companyName,
       password: req.body.password,
       towingServiceNumber: req.body.towingNumber,
-      policyNumber : req.body.policyNumber
+      policyNumber: req.body.policyNumber,
+      claimFormUrl: fileUrl,  // <-- store the URL here
     });
 
-    res.send(200);
-    console.log('Company added with ID: ', docRef.id);
+    res.sendStatus(200);
+    console.log("Company added:", docRef.id);
+    console.log("File URL:", fileUrl);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error uploading file");
   }
-  
-  addUser()
- })
+});
 
-app.post("/edit-company", (req, res) => {  //update company in database
+app.post("/edit-company", upload.single("file"), async (req, res) => {
+  try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
-  const { id, companyName, password, towingNumber,policyNumber } = req.body;
+    const { id, companyName, password, towingNumber, policyNumber } = req.body;
 
-  console.log(req.body);
-  
+    const updateData = {
+      companyName,
+      password,
+      towingServiceNumber: towingNumber,
+      policyNumber,
+    };
 
-  async function updateCompany() {
-  await db.collection("companies").doc(id).update({
-    companyName: companyName,
-    password: password,
-    towingServiceNumber: towingNumber,
-    policyNumber : policyNumber
-  });
-  console.log("Company updated!");
-}
+    // If a new file is uploaded, save it to GCS and add the URL to updateData
+    if (req.file) {
+      const fileName = `company_docs/${companyName}_Claim_Form.pdf`;
+      const gcsFile = bucket.file(fileName);
 
-  updateCompany();
-  res.send(200)
+      await gcsFile.save(req.file.buffer, {
+        contentType: req.file.mimetype,
+      });
 
- })
+      // Generate a signed URL (1 year validity)
+      const expires = Date.now() + 365 * 24 * 60 * 60 * 1000;
+      const [fileUrl] = await gcsFile.getSignedUrl({
+        action: "read",
+        expires,
+      });
+
+      updateData.claimFormUrl = fileUrl;
+    }
+
+    // Update Firestore
+    await db.collection("companies").doc(id).update(updateData);
+
+    console.log("Company updated:", id);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error updating company");
+  }
+});
 
  app.post("/delete/:id",async (req,res)=>{
   const companyId = req.params.id;
