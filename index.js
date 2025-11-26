@@ -36,18 +36,15 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.office365.com", // REQUIRED, or it will use localhost (::1)
-  port: 587,
-  secure: false, // STARTTLS
-  auth: {
-    user: process.env.EMAIL_USER, // full email address
-    pass: process.env.EMAIL_PASS
-  },
-    tls: {
-    ciphers: "SSLv3"
-  }
-  
+    host: "cp68.domains.co.za",  // correct SMTP server
+    port: 465,                    // SSL port
+    secure: true,                 // true for 465, false for 587
+    auth: {
+        user: process.env.EMAIL_USER,  // e.g., no-reply@novexo.co.za
+        pass: process.env.EMAIL_PASS   // email password
+    }
 });
+
 
 // Middleware
 app.use(bodyParser.json({ limit: '50mb' }));          // for JSON requests
@@ -70,8 +67,8 @@ app.post('/submit-form', async (req, res) => {
 
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: "marketing@futur-e.co.za", // Who should receive it
+    from: "no-reply@novexo.co.za",
+    to: "marketing@futur-e.co.za",//"marketing@futur-e.co.za", // Who should receive it
     subject: 'New Lead from Future-e Contact Form',
     text: `Name: ${name_surname}\nCellphone: ${cellphone}\nType: ${type}\nEmail address: ${email}`,
   };
@@ -79,6 +76,7 @@ app.post('/submit-form', async (req, res) => {
   try {
     await transporter.sendMail(mailOptions);
     res.send(200)
+    console.log("Email sent" );
   } catch (error) {
     console.error(error);
     res.status(500)
@@ -155,7 +153,7 @@ app.post("/claims", upload.array("images",50),async (req, res) => {   //claim su
 
     const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: "info@futur-e.co.za", // Who should receive it |   SONY.ANRAY743@GMAIL.COM
+    to: "claims@futur-e.co.za", // Who should receive it |   SONY.ANRAY743@GMAIL.COM
     subject: `New Claim from Future-e claims portal for ${companyName}`,
     text: `DATE, TIME, AND PLACE OF ACCIDENT: ${date_time}\n
            PLACE OF ACCIDENT: ${place}\n
