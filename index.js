@@ -210,7 +210,7 @@ app.post("/add-company", upload.single("file"), async (req, res) => {
     await docRef.set({
       companyName: req.body.companyName,
       password: req.body.password,
-      towingServiceNumber: req.body.towingNumber,
+      towingServiceNumber: req.body.towingServiceNumber,
       policyNumber: req.body.policyNumber,
       claimFormUrl: fileUrl,  // <-- store the URL here
     });
@@ -229,14 +229,13 @@ app.post("/edit-company", upload.single("file"), async (req, res) => {
     console.log("BODY:", req.body);
     console.log("FILE:", req.file);
 
-    const { id, companyName, password, towingNumber, policyNumber } = req.body;
+    const { id, companyName, password, towingServiceNumber, policyNumber } = req.body;
 
-    const updateData = {
-      companyName,
-      password,
-      towingServiceNumber: towingNumber,
-      policyNumber,
-    };
+    const updateData = {};
+    if (companyName) updateData.companyName = companyName;
+    if (password) updateData.password = password;
+    if (towingServiceNumber) updateData.towingServiceNumber = towingServiceNumber;
+    if (policyNumber) updateData.policyNumber = policyNumber;
 
     // If a new file is uploaded, save it to GCS and add the URL to updateData
     if (req.file) {
